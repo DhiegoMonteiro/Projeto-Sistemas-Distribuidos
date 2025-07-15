@@ -19,9 +19,9 @@ public class UserImplementation extends UnicastRemoteObject implements UserServi
         super();
     }
 
-    public UserModel criarUsuario(String id, String nome, String email, BigDecimal balance) {
-        UserModel user = new UserModel(id, nome, email, balance);
-        usuarios.put(id, user);
+    public UserModel criarUsuario(String nome, String email, BigDecimal balance) {
+        UserModel user = new UserModel(nome, email, balance);
+        usuarios.put(user.getId(), user);
         return user;
     }
 

@@ -1,6 +1,7 @@
 package com.sd.projeto.server;
 
 import com.sd.projeto.common.models.CardModel;
+import com.sd.projeto.common.models.UserModel;
 import com.sd.projeto.common.services.CardService;
 
 import java.rmi.RemoteException;
@@ -16,10 +17,10 @@ public class CardImplementation extends UnicastRemoteObject implements CardServi
         super();
     }
 
-    public CardModel criarCartao(String cardId, String idOwner, String type) throws RemoteException {
-        CardModel cartao = new CardModel(cardId, generateCardNumber(), generateExpireDate(), generateCvv(),type, idOwner);
-        cards.put(cardId, cartao);
-        return cartao;
+    public void criarCartao(String idOwner, String type) throws RemoteException {
+
+        CardModel cartao = new CardModel(generateCardNumber(), generateExpireDate(), generateCvv(), type, idOwner);
+        cards.put(cartao.getCardId(), cartao);
     }
 
     public CardModel buscarPorId(String cardId) throws RemoteException {
@@ -40,7 +41,7 @@ public class CardImplementation extends UnicastRemoteObject implements CardServi
     }
 
 
-    public void removerCard(String cardId) throws RemoteException {
+    public void removerCartao(String cardId) throws RemoteException {
         cards.remove(cardId);
     }
 

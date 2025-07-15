@@ -8,7 +8,7 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 public interface UserService extends Remote {
-    UserModel criarUsuario(String id, String nome, String email, BigDecimal balance) throws RemoteException;
+    UserModel criarUsuario(String nome, String email, BigDecimal balance) throws RemoteException;
     UserModel buscarPorId(String id) throws RemoteException;
     List<UserModel> listarUsuarios() throws RemoteException;
     void removerUsuario(String id) throws  RemoteException;
