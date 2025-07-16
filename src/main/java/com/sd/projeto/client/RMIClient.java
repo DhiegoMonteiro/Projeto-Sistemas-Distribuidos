@@ -2,11 +2,14 @@ package com.sd.projeto.client;
 
 import com.sd.projeto.common.models.UserModel;
 import com.sd.projeto.common.models.CardModel;
+import com.sd.projeto.common.models.TransactionModel;
 import com.sd.projeto.common.services.UserService;
 import com.sd.projeto.common.services.CardService;
+import com.sd.projeto.common.services.TransactionService;
 
 import java.math.BigDecimal;
 import java.rmi.Naming;
+import java.rmi.RemoteException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -16,6 +19,7 @@ public class RMIClient {
             Scanner scanner = new Scanner(System.in);
             UserService userService = (UserService) Naming.lookup("rmi://localhost/UserService");
             CardService cardService = (CardService) Naming.lookup("rmi://localhost/CardService");
+            TransactionService transactionService = (TransactionService) Naming.lookup("rmi://localhost/TransactionService");
 
             int opcao;
             do {
@@ -29,6 +33,10 @@ public class RMIClient {
                 System.out.println("7. Listar cartões por dono");
                 System.out.println("8. Buscar cartão por ID");
                 System.out.println("9. Remover cartão por ID");
+                System.out.println("10. Realizar uma tranferência");
+                System.out.println("11. Listar todos as transferências");
+                System.out.println("12. Listar transferências por remetente");
+                System.out.println("13. Buscar transferência por ID");
                 System.out.println("0. Sair");
                 System.out.print("Escolha uma opção: ");
                 opcao = scanner.nextInt();
@@ -164,7 +172,80 @@ public class RMIClient {
                         }
                         System.out.println("_____________________________");
                         break;
+                        
+                    case 10:
+                        System.out.println("_____________________________");
+                        System.out.print("ID do remetente: ");
+                        String senderId = scanner.nextLine();
+                        System.out.print("ID do destinatário: ");
+                        String receiverId = scanner.nextLine();
+                        System.out.print("Valor da transferência: ");
+                        BigDecimal amount = scanner.nextBigDecimal();
+                        scanner.nextLine();
+                        System.out.print("Título/descrição: ");
+                        String title = scanner.nextLine();
 
+                        try {
+                            transactionService.novaTransacao(senderId, amount, receiverId, title);
+                            System.out.println("Transferência realizada com sucesso.");
+                        } catch (RemoteException e) {
+                            System.out.println("Erro ao realizar transferência: " + e.getMessage());
+                        }
+
+                        System.out.println("_____________________________");
+                        break;
+
+                    case 11:
+                        List<TransactionModel> todas = transactionService.listarTransacoes();
+                        System.out.println("_____________________________");
+                        if (todas.isEmpty()) {
+                            System.out.println("Nenhuma transferência registrada.");
+                        } else {
+                            for (TransactionModel t : todas) {
+                                System.out.println("- ID: " + t.getTransactionId() + " | De: " + t.getSender() + " | Para: " + t.getReciever() + " | Valor: R$" + t.getAmount() + " | Título: " + t.getTitle() + " | Data: " + t.getSentAt());
+                            }
+                        }
+                        System.out.println("_____________________________");
+                        break;
+
+                    case 12:
+                        System.out.println("_____________________________");
+                        System.out.print("Digite o ID do remetente: ");
+                        String remetenteId = scanner.nextLine();
+                        if (userService.buscarPorId(remetenteId) == null) {
+                            System.out.println("Usuário remetente não encontrado.");
+                        } else {
+                            List<TransactionModel> transRemetente = transactionService.listarPorSender(remetenteId);
+                            if (transRemetente.isEmpty()) {
+                                System.out.println("Nenhuma transferência encontrada para este remetente.");
+                            } else {
+                                for (TransactionModel t : transRemetente) {
+                                    System.out.println("- ID: " + t.getTransactionId() + " | Para: " + t.getReciever() + " | Valor: R$" + t.getAmount() + " | Título: " + t.getTitle() +" | Data: " + t.getSentAt());
+                                }
+                            }
+                        }
+                        System.out.println("_____________________________");
+                        break;
+
+                    case 13:
+                        System.out.println("_____________________________");
+                        System.out.print("Digite o ID da transferência: ");
+                        String transId = scanner.nextLine();
+                        TransactionModel transacao = transactionService.buscarPorId(transId);
+                        if (transacao != null) {
+                            System.out.println("Transferência encontrada:");
+                            System.out.println("- De: " + transacao.getSender());
+                            System.out.println("- Para: " + transacao.getReciever());
+                            System.out.println("- Valor: R$" + transacao.getAmount());
+                            System.out.println("- Título: " + transacao.getTitle());
+                            System.out.println("- Data: " + transacao.getSentAt());
+                        } else {
+                            System.out.println("Transferência não encontrada.");
+                        }
+                        System.out.println("_____________________________");
+                        break;
+
+                        
                     case 0:
                         System.out.println("_____________________________");
                         System.out.println("Encerrando...");
