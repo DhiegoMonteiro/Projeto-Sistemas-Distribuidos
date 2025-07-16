@@ -7,9 +7,10 @@ public class RMIServer {
     public static void main(String[] args) {
         try {
             LocateRegistry.createRegistry(1099);
-            Naming.rebind("rmi://localhost/UserService", new UserImplementation());
+            UserImplementation userImplementation = new UserImplementation();
+            Naming.rebind("rmi://localhost/UserService", userImplementation);
             Naming.rebind("rmi://localhost/CardService", new CardImplementation());
-            Naming.rebind("rmi://localhost/TransactionService", new TransactionImplementation());
+            Naming.rebind("rmi://localhost/TransactionService", new TransactionImplementation(userImplementation));
             System.out.println("Servidor RMI pronto.");
         } catch (Exception e) {
             e.printStackTrace();

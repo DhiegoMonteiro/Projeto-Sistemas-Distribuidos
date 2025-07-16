@@ -24,17 +24,5 @@ public class UserModel implements  Serializable{
         public String getNome() { return this.nome; }
         public String getEmail() { return this.email; }
         public BigDecimal getBalance(){ return this.balance; }
-        
-        public void deposit(BigDecimal amount) {
-            balance = balance.add(amount);
-        }
-
-        public boolean withdraw(BigDecimal amount) {
-            if (balance.compareTo(amount) >= 0) {
-                balance = balance.subtract(amount);
-                return true;
-            }
-            return false;
-        }
-
+        public void setBalance(BigDecimal balance) {this.balance = balance;}
 }

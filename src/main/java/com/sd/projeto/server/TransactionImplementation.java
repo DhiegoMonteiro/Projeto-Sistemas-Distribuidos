@@ -2,7 +2,6 @@ package com.sd.projeto.server;
 
 import com.sd.projeto.common.models.TransactionModel;
 import com.sd.projeto.common.services.TransactionService;
-import com.sd.projeto.common.models.UserModel;
 
 import java.math.BigDecimal;
 import java.rmi.RemoteException;
@@ -16,28 +15,21 @@ import java.util.Map;
 public class TransactionImplementation extends UnicastRemoteObject implements TransactionService {
 
     private final Map<String, TransactionModel> transacoes = new HashMap<>();
-    private final Map<String, UserModel> usuarios = new HashMap<>();
+    private final UserImplementation userImplementation;
 
-    public TransactionImplementation() throws RemoteException {
+    public TransactionImplementation(UserImplementation userImplementation) throws RemoteException {
         super();
+        this.userImplementation = userImplementation;
     }
    
-    public void novaTransacao(String sender, BigDecimal amount, String receiver, String title) throws RemoteException {
-        UserModel remetente = usuarios.get(sender);
-        UserModel destinatario = usuarios.get(receiver);
-
-        if (remetente == null || destinatario == null) {
-            throw new RemoteException("Usuário inválido.");
+    public boolean novaTransacao(String sender, BigDecimal amount, String receiver, String title) throws RemoteException {
+        if (!userImplementation.withdraw(sender, amount)) {
+            return false;
         }
-
-        if (!remetente.withdraw(amount)) {
-            throw new RemoteException("Saldo insuficiente.");
-        }
-
-        destinatario.deposit(amount);
-
+        userImplementation.deposit(receiver,amount);
         TransactionModel transacao = new TransactionModel(sender, amount, receiver, title, LocalDateTime.now());
         transacoes.put(transacao.getTransactionId(), transacao);
+        return true;
     }
 
 	
@@ -59,6 +51,11 @@ public class TransactionImplementation extends UnicastRemoteObject implements Tr
 	        }
 	        return transacoesSender;
 	}
+
+
+    public void removerTransacao(String idTransacao) throws RemoteException {
+        transacoes.remove(idTransacao);
+    }
 
 
 }

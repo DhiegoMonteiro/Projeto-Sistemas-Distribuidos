@@ -35,4 +35,23 @@ public class UserImplementation extends UnicastRemoteObject implements UserServi
     public void removerUsuario(String id){
         usuarios.remove(id);
     }
+    public Map<String, UserModel> getUsuarios(){
+        return  this.usuarios;
+    }
+    public void deposit(String receiver, BigDecimal amount) {
+        UserModel destinatario = usuarios.get(receiver);
+        BigDecimal newBalance = destinatario.getBalance().add(amount);
+        destinatario.setBalance(newBalance);
+    }
+
+    public boolean withdraw(String sender, BigDecimal amount) {
+        UserModel remetente = usuarios.get(sender);
+        if (remetente.getBalance().compareTo(amount) >= 0) {
+            BigDecimal newBalance = remetente.getBalance().subtract(amount);
+            remetente.setBalance(newBalance);
+            return true;
+        }
+        return false;
+    }
+
 }

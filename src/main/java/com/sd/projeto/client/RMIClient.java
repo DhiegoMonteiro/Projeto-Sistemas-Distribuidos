@@ -33,10 +33,11 @@ public class RMIClient {
                 System.out.println("7. Listar cartões por dono");
                 System.out.println("8. Buscar cartão por ID");
                 System.out.println("9. Remover cartão por ID");
-                System.out.println("10. Realizar uma tranferência");
-                System.out.println("11. Listar todos as transferências");
-                System.out.println("12. Listar transferências por remetente");
-                System.out.println("13. Buscar transferência por ID");
+                System.out.println("10. Realizar Transação");
+                System.out.println("11. Listar todas as Transações");
+                System.out.println("12. Listar Transações por remetente");
+                System.out.println("13. Buscar Transação por ID");
+                System.out.println("14. Remover Histórico de Transação por ID");
                 System.out.println("0. Sair");
                 System.out.print("Escolha uma opção: ");
                 opcao = scanner.nextInt();
@@ -120,7 +121,8 @@ public class RMIClient {
                             System.out.println("Cartões cadastrados:");
                             System.out.println("_____________________________");
                             for (CardModel c : todosCartoes) {
-                                System.out.println("- " + c.getCardId() + ": " + c.getNumber() + " (Id do usuário dono: " + c.getIdOwner() + ")");
+                                System.out.println("Id do Cartão: " + c.getCardId() + " - " + " Número do Cartão: " + c.getNumber()
+                                        + " - " + "Tipo: " + c.getType() + " - " + "Cvv: "+ c.getCvv() + " - " + " (Validade: " + c.getExpireDate() + ")" + " - " + " (Id do usuário dono: " + c.getIdOwner() + ")");
                             }
                             System.out.println("_____________________________");
                         }
@@ -139,9 +141,10 @@ public class RMIClient {
                             } else {
                                 System.out.println("Cartões do usuário " + ownerBusca + ":");
                                 for (CardModel c : cartoesDoOwner) {
-                                    System.out.println("- " + c.getCardId() + ": " + c.getNumber() + " (Validade: " + c.getExpireDate() + ")");
-                                    System.out.println("_____________________________");
+                                    System.out.println("Id do Cartão: " + c.getCardId() + " - " + " Número do Cartão: " + c.getNumber()
+                                            + " - " + "Tipo: " + c.getType() + " - " + "Cvv: "+ c.getCvv() + " - "  + " (Validade: " + c.getExpireDate() + ")");
                                 }
+                                System.out.println("_____________________________");
                             }
                         }
                         break;
@@ -152,7 +155,10 @@ public class RMIClient {
                         String buscarCartaoId = scanner.nextLine();
                         CardModel cartaoBuscado = cardService.buscarPorId(buscarCartaoId);
                         if (cartaoBuscado != null) {
-                            System.out.println("Cartão encontrado: " + cartaoBuscado.getNumber() + " (ID do usuário: " + cartaoBuscado.getIdOwner() + ")");
+                            System.out.println("Cartão encontrado:");
+                            System.out.println("Id do Cartão: " + cartaoBuscado.getCardId() + " - " + " Número do Cartão: " + cartaoBuscado.getNumber()
+                                    + " - " + "Tipo: " + cartaoBuscado.getType() + " - " + "Cvv: "+ cartaoBuscado.getCvv() + " - "
+                                    + " (Validade: " + cartaoBuscado.getExpireDate() + ")" + " - " + " (Id do usuário dono: " + cartaoBuscado.getIdOwner() + ")");
                         } else {
                             System.out.println("Cartão não encontrado.");
                         }
@@ -179,19 +185,25 @@ public class RMIClient {
                         String senderId = scanner.nextLine();
                         System.out.print("ID do destinatário: ");
                         String receiverId = scanner.nextLine();
-                        System.out.print("Valor da transferência: ");
+                        System.out.print("Valor da Transação: ");
                         BigDecimal amount = scanner.nextBigDecimal();
                         scanner.nextLine();
                         System.out.print("Título/descrição: ");
                         String title = scanner.nextLine();
-
-                        try {
-                            transactionService.novaTransacao(senderId, amount, receiverId, title);
-                            System.out.println("Transferência realizada com sucesso.");
-                        } catch (RemoteException e) {
-                            System.out.println("Erro ao realizar transferência: " + e.getMessage());
+                        UserModel remetente = userService.buscarPorId(senderId);
+                        UserModel destinatario = userService.buscarPorId(receiverId);
+                        if(remetente == null){
+                            System.out.println("Remetente não encontrado.");
+                        } else if(destinatario == null){
+                            System.out.println("Destinatário não encontrado.");
+                        } else {
+                            boolean sucesso = transactionService.novaTransacao(senderId, amount, receiverId, title);
+                            if (sucesso) {
+                                System.out.println("Transação realizada com sucesso.");
+                            } else {
+                                System.out.println("Remetente não possui saldo para realizar a Transação.");
+                            }
                         }
-
                         System.out.println("_____________________________");
                         break;
 
@@ -199,10 +211,10 @@ public class RMIClient {
                         List<TransactionModel> todas = transactionService.listarTransacoes();
                         System.out.println("_____________________________");
                         if (todas.isEmpty()) {
-                            System.out.println("Nenhuma transferência registrada.");
+                            System.out.println("Nenhuma Transação registrada.");
                         } else {
                             for (TransactionModel t : todas) {
-                                System.out.println("- ID: " + t.getTransactionId() + " | De: " + t.getSender() + " | Para: " + t.getReciever() + " | Valor: R$" + t.getAmount() + " | Título: " + t.getTitle() + " | Data: " + t.getSentAt());
+                                System.out.println("- ID Transação: " + t.getTransactionId() + " | ID Remetente: " + t.getSender() + " | ID Destinatário: " + t.getReceiver() + " | Valor: R$" + t.getAmount() + " | Título: " + t.getTitle() + " | Data: " + t.getSentAt());
                             }
                         }
                         System.out.println("_____________________________");
@@ -217,10 +229,10 @@ public class RMIClient {
                         } else {
                             List<TransactionModel> transRemetente = transactionService.listarPorSender(remetenteId);
                             if (transRemetente.isEmpty()) {
-                                System.out.println("Nenhuma transferência encontrada para este remetente.");
+                                System.out.println("Nenhuma Transação encontrada para este remetente.");
                             } else {
                                 for (TransactionModel t : transRemetente) {
-                                    System.out.println("- ID: " + t.getTransactionId() + " | Para: " + t.getReciever() + " | Valor: R$" + t.getAmount() + " | Título: " + t.getTitle() +" | Data: " + t.getSentAt());
+                                    System.out.println("- ID da Transação: " + t.getTransactionId() + " | ID Destinatário : " + t.getReceiver() + " | Valor: R$" + t.getAmount() + " | Título: " + t.getTitle() +" | Data: " + t.getSentAt());
                                 }
                             }
                         }
@@ -229,23 +241,36 @@ public class RMIClient {
 
                     case 13:
                         System.out.println("_____________________________");
-                        System.out.print("Digite o ID da transferência: ");
+                        System.out.print("Digite o ID da Transação: ");
                         String transId = scanner.nextLine();
                         TransactionModel transacao = transactionService.buscarPorId(transId);
                         if (transacao != null) {
-                            System.out.println("Transferência encontrada:");
-                            System.out.println("- De: " + transacao.getSender());
-                            System.out.println("- Para: " + transacao.getReciever());
-                            System.out.println("- Valor: R$" + transacao.getAmount());
+                            System.out.println("Transação encontrada:");
+                            System.out.println("- ID Usuário Remetente: " + transacao.getSender());
+                            System.out.println("- ID Usuário Destinatário: " + transacao.getReceiver());
+                            System.out.println("- Valor da Transação: R$" + transacao.getAmount());
                             System.out.println("- Título: " + transacao.getTitle());
                             System.out.println("- Data: " + transacao.getSentAt());
                         } else {
-                            System.out.println("Transferência não encontrada.");
+                            System.out.println("Transação não encontrada.");
+                        }
+                        System.out.println("_____________________________");
+                        break;
+                    case 14:
+                        System.out.println("_____________________________");
+                        System.out.print("Digite o ID da Transação: ");
+                        String removerTransacaoId = scanner.nextLine();
+                        TransactionModel transacaoRemovida = transactionService.buscarPorId(removerTransacaoId);
+                        if (transacaoRemovida != null) {
+                            transactionService.removerTransacao(removerTransacaoId); //
+                            System.out.println("Transação removida com sucesso.");
+                        } else {
+                            System.out.println("Transação não encontrada.");
                         }
                         System.out.println("_____________________________");
                         break;
 
-                        
+
                     case 0:
                         System.out.println("_____________________________");
                         System.out.println("Encerrando...");
